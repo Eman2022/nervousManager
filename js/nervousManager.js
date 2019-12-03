@@ -1,13 +1,38 @@
 
 	//Nervous Manager
 	
-	//my goal： 抓住员工1487
+	//my goal： 抓住员工1487 
+	//1487 logged into accounts 1211, 1080, 1228
 function NervousManager (name){
 	
 	this.name = name; //name of this manager
 	totalEmployees = 0;
 	employees = {};
-	employeeIDList = [];
+	this.lastDayExamined = 0;
+	
+	
+	this.findEmployeeByMainIp = function(ip){
+		for (let [key, employee] of Object.entries(employees)) {
+			if(employee.mainIP === ip){
+				return employee;
+			}
+		}
+	}
+	
+	this.relaxTension = function(){ //衰退危险
+		for (let [key, employee] of Object.entries(employees)) {
+			if(employee.dangerLevel > 0){
+				//console.log("relaxing danger value of " + employee.id + " from " + employee.dangerLevel);
+				var danger = employee.dangerLevel;
+				danger = Math.floor(danger * 0.60);
+				if(danger < 40) danger -= 10;
+				if(danger < 0) danger = 0;
+				employees[key].dangerLevel = danger;
+				//console.log(" to: " + employees[key].dangerLevel);
+			}
+		}
+	}
+	
 	
 	function examineEmployeeID(id){//确定一个员工是存在的。不存在的话：创建
 		if(typeof id !== "undefined"){
@@ -31,7 +56,6 @@ function NervousManager (name){
 			examineEmployeeID(fromParts[0]);
 			employees[fromParts[0]].addEmailReport(email);
 		}
-		
 	}
 
 
@@ -78,6 +102,7 @@ function NervousManager (name){
 					examineLogin(d);
 				});
 			});
+			document.getElementById("statush").innerHTML = "";
 		}
 	}
 	
@@ -148,17 +173,16 @@ function NervousManager (name){
 		if(dangerousEmployees.length > numberToFind){
 			dangerousEmployees = dangerousEmployees.slice((dangerousEmployees.length - numberToFind),dangerousEmployees.length);
 		}
-		for (let [key, value] of Object.entries(dangerousEmployees)) {
+		return dangerousEmployees.reverse();
+	}
+	
+	this.printOutFailedLogins = function(employees){
+		for (let [key, value] of Object.entries(employees)) {
 			var employii = value;
 		  for (let [key2, value2] of Object.entries(employii.workReports)) {
 			console.log(employii.id + "'s failed logins: " + value2.failedLogins + " on " + value2.estDate);
 		  }
 		}
-		
-		return dangerousEmployees.reverse();
 	}
 	
 }
-
-
-
