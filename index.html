@@ -17,29 +17,48 @@
 	<body>
 		<button onclick="loadCSVforDay(1)">1</button>
 		<button onclick="loadCSVforDay(2)">2</button>
+		<button onclick="loadCSVforDay(3)">3</button>
+		<button onclick="loadCSVforDay(4)">4</button>
+		<button onclick="loadCSVforDay(5)">5</button>
+		<button onclick="loadCSVforDay(6)">6</button>
+		<button onclick="loadCSVforDay(27)">27</button>
+		<button onclick="loadCSVforDay(28)">28</button>
 		<button onclick="triggerFindDangerousEmployees()">Draw</button>
+		<h3 id="statush"></h3>
 		<div id="asterDiv"></div>
 	</body>
 	
 	<script type="text/javascript">
 		//MAIN:
 		var manager = new NervousManager("Erich");
-		manager.loadLoginCSV(1);
+		//manager.loadLoginCSV(1);
 		//manager
 		//manager.takeCheckingString("1041,11/1/2017,11/1/2017  6:22:15 AM,11/1/2017  7:45:54 PM");
 		function triggerFindDangerousEmployees(){
 			var dangerousEmployees = manager.findDangerousEmployees(20);
-
 			drawAsterPlot(dangerousEmployees);
-			
-			var employee = manager.getEmployee("1346");
-			console.log(employee);
+			var employee = manager.getEmployee("1487");
+			var employee2 = manager.getEmployee("1228");
+			var employee3 = manager.getEmployee("1080");
+			console.log(employee); //用来确定用户信息分析对了
+			console.log(employee2);
+			console.log(employee3);
 		}
 		
 		function loadCSVforDay(day){
+			//document.getElementById("statush").innerHTML = "loading...";
+			if(day > 1){
+				if(day !== manager.lastDayExamined){
+					manager.relaxTension();
+				}
+			}
+			
 			manager.loadCheckingCSV(day)
 			manager.loadEmailCSV(day);
 			manager.loadLoginCSV(day);
+			manager.lastDayExamined = day;
+			
+			
 		}
 	</script>
 </html>
