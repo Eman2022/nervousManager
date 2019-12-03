@@ -20,4 +20,12 @@ function WorkReport(date, minutes, present){
 	this.present = present;
 	this.workOutput = 0;
 	this.failedLogins = 0;
+	this.danger = 0;
+	
+	this.addDanger = function(amount){
+		this.danger += amount;
+	}
+	this.addReward = function(amount){
+		this.workOutput += amount;
+	}
 }
