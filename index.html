@@ -4,10 +4,12 @@
 		<meta charset="utf-8" />
 		<title></title>
 	</head>
-	<script src="js/artist.js"  type="text/javascript"></script>
+	
 	<script src="js/punishment.js" type="text/javascript" charset="utf-8"></script>
-	<script src="dep/d3v3.js" type="text/javascript"></script>
-	<script src="dep/d3.tip.js" type="text/javascript" charset="utf-8"></script>
+	<script src="dep/d3.v4.js" type="text/javascript"></script>
+	<script src="dep/scaleRadial.js" type="text/javascript"></script>
+	<script src="js/artist.js"  type="text/javascript"></script>
+	
 	<script src="js/employee.js"></script>
 	
 	<script src="js/model.js" type="text/javascript" charset="utf-8"></script>
@@ -15,17 +17,27 @@
 	
 	<link rel="stylesheet" href="css/asterstyle.css" />
 	<body>
-		<button onclick="loadCSVforDay(1)">1</button>
-		<button onclick="loadCSVforDay(2)">2</button>
-		<button onclick="loadCSVforDay(3)">3</button>
-		<button onclick="loadCSVforDay(4)">4</button>
-		<button onclick="loadCSVforDay(5)">5</button>
-		<button onclick="loadCSVforDay(6)">6</button>
-		<button onclick="loadCSVforDay(27)">27</button>
-		<button onclick="loadCSVforDay(28)">28</button>
-		<button onclick="triggerFindDangerousEmployees()">Draw</button>
-		<h3 id="statush"></h3>
-		<div id="asterDiv"></div>
+		<div id="buttonLine">
+			<button onclick="loadCSVforDay(1)">1</button>
+			<button onclick="loadCSVforDay(2)">2</button>
+			<button onclick="loadCSVforDay(3)">3</button>
+			<button onclick="loadCSVforDay(4)">4</button>
+			<button onclick="loadCSVforDay(5)">5</button>
+			<button onclick="loadCSVforDay(6)">6</button>
+			<button onclick="loadCSVforDay(7)">7</button>
+			<button onclick="loadCSVforDay(8)">8</button>
+			<button onclick="loadCSVforDay(9)">9</button>
+			<button onclick="loadCSVforDay(10)">10</button>
+			<button onclick="loadCSVforDay(27)">27</button>
+			<button onclick="loadCSVforDay(28)">28</button>
+			<button onclick="triggerFindDangerousEmployees()">Draw</button>
+		</div>
+		<div id="d3Parent">
+			<div id="asterDiv" class=""></div>
+		</div>
+		<div id="floaterParent">
+			<div id="barDiv"></div>
+		</div>
 	</body>
 	
 	<script type="text/javascript">
@@ -35,14 +47,21 @@
 		//manager
 		//manager.takeCheckingString("1041,11/1/2017,11/1/2017  6:22:15 AM,11/1/2017  7:45:54 PM");
 		function triggerFindDangerousEmployees(){
-			var dangerousEmployees = manager.findDangerousEmployees(20);
-			drawAsterPlot(dangerousEmployees);
-			var employee = manager.getEmployee("1487");
-			var employee2 = manager.getEmployee("1228");
-			var employee3 = manager.getEmployee("1080");
-			console.log(employee); //用来确定用户信息分析对了
-			console.log(employee2);
-			console.log(employee3);
+			drawRadialStackedBarChart(manager.findDangerousEmployees(15));
+			
+			//var dangerousEmployees = manager.findDangerousEmployees(30);
+			//drawAsterPlot(dangerousEmployees);
+//			var employee = manager.getEmployee("1487");
+//			var employee2 = manager.getEmployee("1164");
+//			var employee3 = manager.getEmployee("1080");
+//			var employee4 = manager.getEmployee("1007");
+//			var employee5 = manager.getEmployee("1041");
+			//console.log(employee); //用来确定用户信息分析对了
+//			console.log(employee4);
+//			console.log(employee2);
+//			
+//			console.log(manager.getEmployee("1059"));
+			//console.log(employee3);
 		}
 		
 		function loadCSVforDay(day){
@@ -56,8 +75,21 @@
 			manager.loadCheckingCSV(day)
 			manager.loadEmailCSV(day);
 			manager.loadLoginCSV(day);
-			manager.lastDayExamined = day;
+			//manager.loadTCPLogCSV(day);
 			
+			manager.lastDayExamined = day;
+		}
+		
+		function exploreDanger(id){
+			//alert("let's check out " + id + "!");
+		}
+		
+		function toggleFocused(id, angle){
+			rotateCBG(-1 * angle * 57.2957795);
+			drawHorizontalBarChart(manager.findDangerousEmployees(15));
+		}
+		
+		function hideToolbars(){
 			
 		}
 	</script>
