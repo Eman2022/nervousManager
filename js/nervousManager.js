@@ -1,3 +1,4 @@
+
 	//Nervous Manager
 	
 	//my goal： 抓住员工1487 
@@ -111,6 +112,17 @@ function NervousManager (name){
 		}
 	}
 	
+	function examineTCPReport(report){
+		//stime, dtime, proto, dip, dport, sip, sport, uplink_length, downlink_length
+		if(report){
+			if(manager){
+				var likelyEmployee = manager.findEmployeeByMainIp(report.sip);
+				if(likelyEmployee) likelyEmployee.addTCPReport(report);
+			}
+			
+		}
+	}
+	
 	this.loadLoginCSV = function(day){
 		var dayString = "0";
 		if(typeof day !== "undefined"){
@@ -172,7 +184,13 @@ function NervousManager (name){
 			}
 			d3.csv("csv/2017-11-"+dayString+"/tcpLog.csv", function(data) {
 				data.forEach(function(d){
-					//TODO: finish
+
+					var char0 = d.proto.charAt(0);
+					if(char0 === 's' && d.proto.charAt(1) === 's' || char0 === 'f'){
+						if(parseInt(d.downlink_length) > 15000 || parseInt(d.uplink_length) > 15000){
+							examineTCPReport(d);
+						}
+					}
 				});
 			});
 		}
