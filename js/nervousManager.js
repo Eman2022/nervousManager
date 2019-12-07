@@ -1,4 +1,3 @@
-
 	//Nervous Manager
 	
 	//my goal： 抓住员工1487 
@@ -9,13 +8,30 @@ function NervousManager (name){
 	totalEmployees = 0;
 	employees = {};
 	this.lastDayExamined = 0;
-	
+
+
 	
 	this.findEmployeeByMainIp = function(ip){
+		var empsWithThisMainIP = [];
+		var bestGuess;
 		for (let [key, employee] of Object.entries(employees)) {
 			if(employee.mainIP === ip){
-				return employee;
+				empsWithThisMainIP.push(employee);
 			}
+		}
+		if(empsWithThisMainIP.length === 1){
+			return empsWithThisMainIP[0];
+		} else if (empsWithThisMainIP.length > 1){
+			//console.log("THIS FUNCTION WAS USEFUL");
+			bestGuess = empsWithThisMainIP[0];
+			for(var i = 1; i < empsWithThisMainIP; i++){
+				var thisEmpl = empsWithThisMainIP[i];
+				var ipUses = thisEmpl.ipUse[ip];
+				if(ipUses > bestGuess.ipUse[ip]){
+					bestGuess = thisEmpl;
+				}
+			}
+			return bestGuess;
 		}
 	}
 	
@@ -24,15 +40,22 @@ function NervousManager (name){
 			if(employee.dangerLevel > 0){
 				//console.log("relaxing danger value of " + employee.id + " from " + employee.dangerLevel);
 				var danger = employee.dangerLevel;
+				var workOutput = employee.workOutput;
 				danger = Math.floor(danger * 0.60);
 				if(danger < 40) danger -= 10;
 				if(danger < 0) danger = 0;
+				
+				workOutput = Math.floor(workOutput * 0.50);
+				if(workOutput < 40) workOutput -= 10;
+				if(workOutput < 0) workOutput = 0;
+				
 				employees[key].dangerLevel = danger;
+				employees[key].workOutput = workOutput;
+;				employee.criticalMessage = "";
 				//console.log(" to: " + employees[key].dangerLevel);
 			}
 		}
 	}
-	
 	
 	function examineEmployeeID(id){//确定一个员工是存在的。不存在的话：创建
 		if(typeof id !== "undefined"){
@@ -51,7 +74,6 @@ function NervousManager (name){
 		//console.log("got email from " +email.from + " emails");
 		
 		var fromParts = email.from.split("@");
-
 		if(!isNaN(fromParts[0])){
 			examineEmployeeID(fromParts[0]);
 			employees[fromParts[0]].addEmailReport(email);
@@ -102,7 +124,7 @@ function NervousManager (name){
 					examineLogin(d);
 				});
 			});
-			document.getElementById("statush").innerHTML = "";
+
 		}
 	}
 	
@@ -139,6 +161,23 @@ function NervousManager (name){
 		}
 		return this;
 	};
+	
+	this.loadTCPLogCSV = function(day){
+		var dayString = "0";
+		if(typeof day !== "undefined"){
+			if(day < 10){
+				dayString = dayString + day;
+			} else {
+				dayString = day;
+			}
+			d3.csv("csv/2017-11-"+dayString+"/tcpLog.csv", function(data) {
+				data.forEach(function(d){
+					//TODO: finish
+				});
+			});
+		}
+		return this;
+	}
 
 	this.takeCheckingString = function(line){//接受一条新的打卡日志(NOT IN USE)
 		var checkinObject = new CheckIn(line);
