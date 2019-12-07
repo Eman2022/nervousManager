@@ -28,7 +28,7 @@ function Employee(id){
 	this.examineLoginFailue = function(accessDate, login, usedIPisMyIp){
 		//proto, dip, dport, sip, sport, state, time, user
 		if(usedIPisMyIp){
-			if(login.proto === "ftp"){
+			if(login.proto === "ssh"){
 				this.punish(accessDate, 9);
 			} else {
 				this.punish(accessDate, 8);
@@ -197,6 +197,14 @@ function Employee(id){
 			this.examineLoginFailue(accessDate, login, usedIPisMyIp);//检查登录失败
 
 		}
+		
+	}
+	
+	this.addTCPReport = function(report){//TODO:finish
+		//stime, dtime, proto, dip, dport, sip, sport, uplink_length, downlink_length
+		this.examineUsedIP(report.sip);
+		this.examineAccessedIP(report.dip);
+		
 		
 	}
 	
