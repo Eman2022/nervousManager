@@ -8,28 +8,53 @@
 	<script src="js/punishment.js" type="text/javascript" charset="utf-8"></script>
 	<script src="dep/d3.v4.js" type="text/javascript"></script>
 	<script src="dep/scaleRadial.js" type="text/javascript"></script>
-	<script src="js/artist.js"  type="text/javascript"></script>
-	
-	<script src="js/employee.js"></script>
 	
 	<script src="js/model.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/artist.js" type="text/javascript"></script>
+	<script src="js/server.js" type="text/javascript"></script>
+	<script src="js/employee.js" type="text/javascript" charset="utf-8"></script>
+	
+	
 	<script src="js/nervousManager.js" type="text/javascript" charset="utf-8"></script>
 	
 	<link rel="stylesheet" href="css/asterstyle.css" />
 	<body>
 		<div id="buttonLine">
-			<button onclick="loadCSVforDay(1)">1</button>
-			<button onclick="loadCSVforDay(2)">2</button>
-			<button onclick="loadCSVforDay(3)">3</button>
-			<button onclick="loadCSVforDay(4)">4</button>
-			<button onclick="loadCSVforDay(5)">5</button>
-			<button onclick="loadCSVforDay(6)">6</button>
-			<button onclick="loadCSVforDay(7)">7</button>
-			<button onclick="loadCSVforDay(8)">8</button>
-			<button onclick="loadCSVforDay(9)">9</button>
-			<button onclick="loadCSVforDay(10)">10</button>
-			<button onclick="loadCSVforDay(27)">27</button>
-			<button onclick="loadCSVforDay(28)">28</button>
+			<button id='loadday1' onclick="loadCSVforDay(1)">1</button>
+			<button id='loadday2' onclick="loadCSVforDay(2)">2</button>
+			<button id='loadday3' onclick="loadCSVforDay(3)">3</button>
+			<button id='loadday4' onclick="loadCSVforDay(4)">4</button>
+			<button id='loadday5' onclick="loadCSVforDay(5)">5</button>
+			<button id='loadday6' onclick="loadCSVforDay(6)">6</button>
+			<button id='loadday7' onclick="loadCSVforDay(7)">7</button>
+			<button id='loadday8' onclick="loadCSVforDay(8)">8</button>
+			<button id='loadday9' onclick="loadCSVforDay(9)">9</button>
+			<button id='loadday10' onclick="loadCSVforDay(10)">10</button>
+			
+			<button id='loadday11' onclick="loadCSVforDay(11)">11</button>
+			<button id='loadday12' onclick="loadCSVforDay(12)">12</button>
+			<button id='loadday13' onclick="loadCSVforDay(13)">13</button>
+			<button id='loadday14' onclick="loadCSVforDay(14)">14</button>
+			<button id='loadday15' onclick="loadCSVforDay(15)">15</button>
+			<button id='loadday16' onclick="loadCSVforDay(16)">16</button>
+			<button id='loadday17' onclick="loadCSVforDay(17)">17</button>
+			<button id='loadday18' onclick="loadCSVforDay(18)">18</button>
+			<button id='loadday19' onclick="loadCSVforDay(19)">19</button>
+			<button id='loadday20' onclick="loadCSVforDay(20)">20</button>
+			
+			<button id='loadday21' onclick="loadCSVforDay(21)">21</button>
+			<button id='loadday22' onclick="loadCSVforDay(22)">22</button>
+			<button id='loadday23' onclick="loadCSVforDay(23)">23</button>
+			<button id='loadday24' onclick="loadCSVforDay(24)">24</button>
+			<button id='loadday25' onclick="loadCSVforDay(25)">25</button>
+			<button id='loadday26' onclick="loadCSVforDay(26)">26</button>
+			
+			<button id='loadday27' onclick="loadCSVforDay(27)">27</button>
+			<button id='loadday28' onclick="loadCSVforDay(28)">28</button>
+			
+			<button id='loadday29' onclick="loadCSVforDay(29)">29</button>
+			<button id='loadday30' onclick="loadCSVforDay(30)">30</button>
+			
 			<button onclick="triggerFindDangerousEmployees()">Draw</button>
 		</div>
 		<div id="d3Parent">
@@ -43,14 +68,11 @@
 	<script type="text/javascript">
 		//MAIN:
 		var manager = new NervousManager("Erich");
-		//manager.loadLoginCSV(1);
-		//manager
-		//manager.takeCheckingString("1041,11/1/2017,11/1/2017  6:22:15 AM,11/1/2017  7:45:54 PM");
+
 		function triggerFindDangerousEmployees(){
-			drawRadialStackedBarChart(manager.findDangerousEmployees(15));
+			drawRadialStackedBarChart(manager.findDangerousEmployees(20));
 			
-			//var dangerousEmployees = manager.findDangerousEmployees(30);
-			//drawAsterPlot(dangerousEmployees);
+
 //			var employee = manager.getEmployee("1487");
 //			var employee2 = manager.getEmployee("1164");
 //			var employee3 = manager.getEmployee("1080");
@@ -59,34 +81,71 @@
 			//console.log(employee); //用来确定用户信息分析对了
 //			console.log(employee4);
 //			console.log(employee2);
-//			
+//			console.log(manager.findEmployeeByMainIp("10.50.50.28"));
 //			console.log(manager.getEmployee("1059"));
 			//console.log(employee3);
 		}
 		
 		function loadCSVforDay(day){
+			if(!manager.managerBusy){
+				manager.managerBusy = true;
 			//document.getElementById("statush").innerHTML = "loading...";
-			if(day > 1){
-				if(day !== manager.lastDayExamined){
-					manager.relaxTension();
+				if(day > 1){
+					if(day !== manager.lastDayExamined){
+						manager.relaxTension();
+					}
 				}
+				var child = document.getElementById("loadday" + day);
+				var parent = document.getElementById("buttonLine");
+				
+				parent.removeChild(child);
+				
+				manager.loadCheckingCSV(day)
+				manager.loadEmailCSV(day);
+				manager.loadLoginCSV(day);
+				manager.loadTCPLogCSV(day);
+				manager.loadWebLogCSV(day);
+				manager.lastDayExamined = day;
+				
 			}
-			
-			manager.loadCheckingCSV(day)
-			manager.loadEmailCSV(day);
-			manager.loadLoginCSV(day);
-			//manager.loadTCPLogCSV(day);
-			
-			manager.lastDayExamined = day;
 		}
 		
 		function exploreDanger(id){
 			//alert("let's check out " + id + "!");
 		}
 		
-		function toggleFocused(id, angle){
+		function highlightAlerts(classID){
+			//console.log("need to highlight: " + classID);
+			var punishID = parseInt(classID.substring(3, classID.length));
+			var elemsd3 = d3.selectAll("." + classID);
+			elemsd3.style('fill', punishment[punishID].color);
+			//alert("got punished ID: " + punishID + " from " + classID);
+			var elems = document.getElementsByClassName(classID);
+		}
+		
+		function removeHightlights(classID){
+			var elemsd3 = d3.selectAll("." + classID);
+			
+			var elemlength = 0;
+			elemsd3.each(function(){
+				var d3Elem = d3.select(this);
+				var dangerLevel = parseInt(d3Elem.attr("dangerLevel"));
+				d3Elem.style('fill', getWedgeColor(dangerLevel));
+				elemlength++;
+			});
+
+		}
+		
+		function toggleFocused(id, angle){ //员工被选上的反应方法
 			rotateCBG(-1 * angle * 57.2957795);
-			drawHorizontalBarChart(manager.findDangerousEmployees(15));
+			var isShowingAll = false;
+			drawHorizontalBarChart(manager.getEmployee(id).compileRecentDangerReport(), id, isShowingAll);
+
+		}
+		
+		function showAllDanger(id){ //让bar chart显示所有警告信息
+			var isShowingAll = true;
+			drawHorizontalBarChart(manager.getEmployee(id).compileCompleteDangerReport(), id, isShowingAll);
 		}
 		
 		function hideToolbars(){
