@@ -1,6 +1,7 @@
 var currentDrawing = {
 	cx : 0,
-	cy : 0
+	cy : 0,
+	lastDate : "unknown"
 }
 
 function drawRadialStackedBarChart(dangerousEmployees){
@@ -57,7 +58,7 @@ function drawRadialStackedBarChart(dangerousEmployees){
 	  // Y scale outer variable
 	  var y = d3.scaleRadial()
 	      .range([innerRadius, outerRadius])   // Domain will be define later.
-	      .domain([0, highestDangerLevel * 2]); // Domain of Y is from 0 to the max seen in the data
+	      .domain([0, highestDangerLevel * 1.6]); // Domain of Y is from 0 to the max seen in the data
 	
 	  // Second barplot Scales
 	  var ybis = d3.scaleRadial()
@@ -65,7 +66,7 @@ function drawRadialStackedBarChart(dangerousEmployees){
 	      .domain([0, highestWorkOutput]);
 	
 	  var padAngle = 0.09;
-	
+	  //var ownedAngles = {};
 	  // Add the bars
 	  svg.append("g")
 	    .selectAll("path")
@@ -73,11 +74,22 @@ function drawRadialStackedBarChart(dangerousEmployees){
 	    .enter()
 	    .append("path")
 	      .attr("fill", function(d) { return getWedgeColor(d.dangerLevel);})
-	      .attr("class", "dangerBar")
+	      .attr("class", function(d){
+	      	var thisDangerReports = d.compileRecentDangerReport();
+	      	var classesToAdd = "dangerBar ";
+	      	for(var i = 0; i < thisDangerReports.length; i++){
+	      		classesToAdd += "pID"+thisDangerReports[i].punishID + " ";
+	      	}
+	      	return classesToAdd;
+	      })
 	      .attr("id", function(d) { return d.id; })
 	      .attr("onmouseenter", function(d) { return "exploreDanger(" + d.id + ")"; })
+	      .attr("dangerLevel", function(d) { return d.dangerLevel; })
 	      .attr("onmouseleave", "hideToolbars()")
-	      .attr("onclick", function(d) { return "toggleFocused(" + d.id + ", " + (((x(d.id) + x.bandwidth() - x(d.id))) * 0.5 + x(d.id)) +")"; })//
+	      .attr("onclick", function(d) {
+	      	//var toSpinto = ((x(d.id) + x.bandwidth() - x(d.id))) * 0.5 + x(d.id);
+	      	//ownedAngles[d.id] = toSpinto;
+	      	return "toggleFocused(" + d.id + ", " + (((x(d.id) + x.bandwidth() - x(d.id))) * 0.5 + x(d.id)) +")"; })//
 	      .attr("d", d3.arc()     // imagine your doing a part of a donut plot
 	          .innerRadius(innerRadius)
 	          .outerRadius(function(d) { return y(d.dangerLevel); })
@@ -86,8 +98,9 @@ function drawRadialStackedBarChart(dangerousEmployees){
 	          .endAngle(function(d) { 
 	          	 return x(d.id) + x.bandwidth(); })
 	          .padAngle(padAngle)
-	          
 	          .padRadius(innerRadius));
+	          
+	          //console.log(ownedAngles);
 	
 	  // Add the labels
 	  svg.append("g")
@@ -117,33 +130,49 @@ function drawRadialStackedBarChart(dangerousEmployees){
 	          .endAngle(function(d) { return x(d.id) + x.bandwidth(); })
 	          .padAngle(padAngle)
 	          .padRadius(innerRadius));
-	//rotateCBG(20);
-	//});
+
 }
 
-function drawHorizontalBarChart(dangerousEmployees){
+function drawHorizontalBarChart(dangerReports, employeeID, isShowAll){
 	//alert("got " + dangerousEmployees.length +" employees");
-	document.getElementById("barDiv").innerHTML = "";
+	
+	var totalDanger = 0;
+	var data = dangerReports;
+	var maxValue = 100;
+	for(var i = 0; i < dangerReports.length; i++){
+		if(dangerReports[i].totalDanger > 100){
+			maxValue = dangerReports[i].totalDanger;
+		}
+		totalDanger += dangerReports[i].totalDanger;
+	}
+	var showAllButton = "<button onclick='showAllDanger("+employeeID+")'>See all</button>";
+	var title = "'s Recent Alerts    ";
+	if(isShowAll){
+		showAllButton = "";
+		title = "'s Lifetime Alerts     ";
+	}
+	
+	document.getElementById("barDiv").innerHTML = "<h4 style='position:absolute;top:30px;left:20px;z-index:50'>"
+	+employeeID+ title +showAllButton+"</h4>";
 	var margin = {top: 20, right: 30, bottom: 40, left: 90},
-    width = 460 - margin.left - margin.right,
-    height = 400 - margin.top - margin.bottom;
+    width = 490 - margin.left - margin.right,
+    height = 40 + 40 * dangerReports.length - margin.top - margin.bottom;
 
 // append the svg object to the body of the page
-var svg = d3.select("#barDiv")
-  .append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-    .attr("style", "position:absolute; top:40px")
-  .append("g")
-    .attr("transform",
-          "translate(" + margin.left + "," + margin.top + ")");
+	var svg = d3.select("#barDiv")
+	  .append("svg")
+	    .attr("width", width + margin.left + margin.right)
+	    .attr("height", height + margin.top + margin.bottom)
+	    .attr("style", "position:absolute; top:50px")
+	  .append("g")
+	    .attr("transform",
+	          "translate(" + margin.left + "," + margin.top + ")");
 
-// Parse the Data
-	//d3.csv("https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/7_OneCatOneNum_header.csv", function(data) {
-   var data = dangerousEmployees;
+
+   
   // Add X axis
   var x = d3.scaleLinear()
-    .domain([0, 100])
+    .domain([0, maxValue])
     .range([ 0, width]);
   svg.append("g")
     .attr("transform", "translate(0," + height + ")")
@@ -155,38 +184,47 @@ var svg = d3.select("#barDiv")
   // Y axis
   var y = d3.scaleBand()
     .range([ 0, height ])
-    .domain(data.map(function(d) { return d.id; }))
+    .domain(data.map(function(d) { return d.title + " " + (d.totalDanger / punishment[d.punishID].amount) + "x"; }))//d.title;
     .padding(.1);
   svg.append("g")
     .call(d3.axisLeft(y));
+    
+    var defaultColor = "#69b3a2";
+    
 
+    
+    
   //Bars
   svg.selectAll("myRect")
     .data(data)
     .enter()
     .append("rect")
-    .attr("x", x(0) )
-    .attr("y", function(d) { return y(d.id); })
-    .attr("width", function(d) { return x(d.dangerLevel); })
-    .attr("height", y.bandwidth() )
-    .attr("fill", "#69b3a2");
-   
+    .attr("x", x(0) )// + (d.totalDanger / punishment[d.punishID].amount) + "x")
+    .attr("y", function(d) { return y(d.title + " " + (d.totalDanger / punishment[d.punishID].amount) + "x"); })
+    .attr("id",function(d) { return "pID" + d.punishID; })
+    .attr("class","alertBar")
+    .attr("onmouseenter", function(d) { return "highlightAlerts('pID" + d.punishID + "')"})
+    .attr("onmouseleave", function(d) { return "removeHightlights('pID" + d.punishID + "')"})
+    .attr("width", function(d) { return x(d.totalDanger); })
+    .attr("height", y.bandwidth())
+    .attr("fill", function(d){
+		return punishment[d.punishID].color;
+    });
+    
+
 }
 
 
 function rotateCBG(amount){ //旋转原型的图标
 	var svg = d3.select("g");
-
         svg.transition()
         .duration(2500) //translate(' + (currentDrawing.cx / 2) + "," + (currentDrawing.cy / 2) + ")"
         .attr('transform' , 'rotate('+amount+', '+currentDrawing.cx+','+currentDrawing.cy +') translate('+ currentDrawing.cy +','+ currentDrawing.cx+ ')');
         //' + (currentDrawing.cx) + ',' + (currentDrawing.cy) +')' );
-
 }
 
 
 function getWedgeColor(danger){
-	
 	if(danger < 85) return "#808080";//gray
 	var ratio = (danger / 100);
 	var red =  Math.floor(ratio * 255);
@@ -213,4 +251,4 @@ function shuffleArray(arr) { // 把array里头的东西随机化
     }
   }
   return result;
-} 
+}
