@@ -1,3 +1,4 @@
+
 #asterDiv{
 	display: inline-block;
 }
@@ -9,8 +10,13 @@
 	position: absolute;
 }
 
-
 .dangerBar:hover{
 	cursor: pointer;
 	fill: cadetblue;
+}
+.alertBar:hover{
+	cursor: pointer;
+}
+.arcTextSelected{
+	font-weight: bold;
 }
