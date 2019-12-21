@@ -13,10 +13,6 @@ function Server(ip){
 		}
 		this.activityReports[accessDate].accesses += 1;
 		this.mostRecentUsers.push(new LoginToServer(login));
-//		if(this.mostRecentUsers.length > 300){
-//			this.mostRecentUsers.shift();
-//		}
-		//console.log(this.mostRecentUsers);
 	}
 	
 	this.addTCPReport = function(report){
