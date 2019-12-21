@@ -43,6 +43,7 @@ function WorkReport(date, minutes, present){
 	
 	this.arrivedAtWork;
 	this.leftWork;
+	this.checkedValue = 0;
 	
 	this.addDanger = function(amount){
 		this.danger += amount;
@@ -60,6 +61,16 @@ function WorkReport(date, minutes, present){
 	
 	this.getAlerts = function(){
 		return this.alerts;
+	}
+	
+	this.getDangerFromPunishment = function(punishID){
+		var count = 0;
+		for(var i = 0; i < this.alerts.length; i++){
+			if(this.alerts[i] === punishID){
+				count++;
+			}
+		}
+		return count * punishment[punishID].amount;
 	}
 }
 
