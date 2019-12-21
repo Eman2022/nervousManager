@@ -56,12 +56,27 @@
 			<button id='loadday30' onclick="loadCSVforDay(30)">30</button>
 			
 			<button onclick="triggerFindDangerousEmployees()">Draw</button>
+			
+			
+			  <input type="range" min="10" max="150" value="20" class="rangeSlider" id="sliderRange">
+                  
+			<label class="switch" style="float: right;">
+			  <input id="randomYesNo" type="checkbox" onchange="triggerFindDangerousEmployees()">
+			  <span class="slider"></span>
+			</label>
 		</div>
 		<div id="d3Parent">
-			<div id="asterDiv" class=""></div>
+			<div id="asterDiv" onclick="removeHightlights()" class=""></div>
 		</div>
+		<div id="backgroundDiv"></div>
 		<div id="floaterParent">
 			<div id="barDiv"></div>
+		</div>
+		<div id="secondaryExplore">
+			
+		</div>
+		<div id="tertiaryExplore">
+			
 		</div>
 	</body>
 	
@@ -69,24 +84,26 @@
 		//MAIN:
 		var manager = new NervousManager("Erich");
 
-		function triggerFindDangerousEmployees(){
-			drawRadialStackedBarChart(manager.findDangerousEmployees(20));
-			
+		var rangeslider = document.getElementById("sliderRange"); 
+ 
 
-//			var employee = manager.getEmployee("1487");
-//			var employee2 = manager.getEmployee("1164");
-//			var employee3 = manager.getEmployee("1080");
-//			var employee4 = manager.getEmployee("1007");
-//			var employee5 = manager.getEmployee("1041");
-			//console.log(employee); //用来确定用户信息分析对了
-//			console.log(employee4);
-//			console.log(employee2);
-//			console.log(manager.findEmployeeByMainIp("10.50.50.28"));
-//			console.log(manager.getEmployee("1059"));
-			//console.log(employee3);
+		  
+		rangeslider.oninput = function() { 
+		  triggerFindDangerousEmployees(this.value); 
+		} 
+
+		function triggerFindDangerousEmployees(numberToFind){
+			if(!numberToFind){
+				numberToFind = document.getElementById("sliderRange").value;
+			}
+			
+			drawRadialStackedBarChart(manager.findDangerousEmployees(numberToFind));
 		}
 		
 		function loadCSVforDay(day){
+			document.getElementById("barDiv").innerHTML = "";
+			document.getElementById("backgroundDiv").innerHTML = "";
+			hideToolbars();
 			if(!manager.managerBusy){
 				manager.managerBusy = true;
 			//document.getElementById("statush").innerHTML = "loading...";
@@ -110,46 +127,79 @@
 			}
 		}
 		
-		function exploreDanger(id){
-			//alert("let's check out " + id + "!");
-		}
-		
 		function highlightAlerts(classID){
-			//console.log("need to highlight: " + classID);
+			if(currentDrawing.textOverridden){
+				removeHightlights();
+			}
+			
+			currentDrawing.saveOldText = {};
+			var elems = document.getElementsByClassName("radTextSegment");
 			var punishID = parseInt(classID.substring(3, classID.length));
+			
+			for(var i = 0; i < elems.length; i++){
+				currentDrawing.saveOldText[elems[i].id] = elems[i].innerHTML;
+				elems[i].innerHTML = manager.getEmployee(elems[i].id.substring(0, 4)).countRecentPunishments(punishID);
+			}
+
 			var elemsd3 = d3.selectAll("." + classID);
 			elemsd3.style('fill', punishment[punishID].color);
-			//alert("got punished ID: " + punishID + " from " + classID);
-			var elems = document.getElementsByClassName(classID);
+			currentDrawing.textOverridden = true;
 		}
 		
 		function removeHightlights(classID){
-			var elemsd3 = d3.selectAll("." + classID);
+			if(!currentDrawing.keepSecondary){
+				document.getElementById("secondaryExplore").innerHTML = "";
+			} else {
+				currentDrawing.keepSecondary = false;
+			}
 			
-			var elemlength = 0;
-			elemsd3.each(function(){
-				var d3Elem = d3.select(this);
-				var dangerLevel = parseInt(d3Elem.attr("dangerLevel"));
-				d3Elem.style('fill', getWedgeColor(dangerLevel));
-				elemlength++;
-			});
-
+			if(currentDrawing.textOverridden){
+				var toRemove = "dangerBar";
+				if(classID) toRemove = classID;
+				
+				for (let [key, value] of Object.entries(currentDrawing.saveOldText)) {
+					var elem = document.getElementById(key);
+					if(elem) elem.innerHTML = value;
+				}
+				
+				var elemsd3 = d3.selectAll("." + toRemove);
+				
+				elemsd3.each(function(){
+					var d3Elem = d3.select(this);
+					var dangerLevel = parseInt(d3Elem.attr("dangerLevel"));
+					d3Elem.style('fill', getWedgeColor(dangerLevel));
+				});
+				currentDrawing.textOverridden = false;
+				
+			}
 		}
 		
 		function toggleFocused(id, angle){ //员工被选上的反应方法
+			
+			hideToolbars();
+			currentDrawing.examiningLifeTime = false;
 			rotateCBG(-1 * angle * 57.2957795);
+			var elem = document.getElementById(id +"tx");
+			elem.classList.add("arcTextSelected");
+
 			var isShowingAll = false;
 			drawHorizontalBarChart(manager.getEmployee(id).compileRecentDangerReport(), id, isShowingAll);
-
+			
+			drawLineGraph(id,"danger")//"danger"
 		}
 		
 		function showAllDanger(id){ //让bar chart显示所有警告信息
 			var isShowingAll = true;
+			currentDrawing.examiningLifeTime = true;
 			drawHorizontalBarChart(manager.getEmployee(id).compileCompleteDangerReport(), id, isShowingAll);
 		}
 		
 		function hideToolbars(){
-			
+			if(currentDrawing.textOverridden){
+				removeHightlights();
+			}
+			document.getElementById("barDiv").innerHTML = "";
+			document.getElementById("secondaryExplore").innerHTML = "";
 		}
 	</script>
 </html>
