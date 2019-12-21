@@ -96,6 +96,31 @@ function Employee(id){
 		}
 	}
 	
+	this.countRecentPunishments = function(punishID){//数一下此员工前段时间(两天)被这个惩罚被惩罚了几次
+		//console.log(this.id + " looking for recent " + punishID + " punishments");
+		var dangerReports;
+		if(currentDrawing.examiningLifeTime){
+			dangerReports = this.compileCompleteDangerReport();
+		} else {
+			dangerReports = this.compileRecentDangerReport();
+		}
+		var numberOfTimes = 0;
+		//console.log("compare " + punishID + " and " + dangerReports[0].punishID);
+		for(var i = 0; i < dangerReports.length; i++){
+			if(dangerReports[i].punishID == punishID){
+				//console.log("found related danger report");
+				numberOfTimes = dangerReports[i].totalDanger / punishment[punishID].amount;
+			}
+		}
+		
+		if(numberOfTimes === 0){
+			numberOfTimes = "";
+		} else {
+			numberOfTimes = numberOfTimes + "x";
+		}
+		return numberOfTimes;
+	}
+	
 	this.addDataSent = function(dateIn, amount, ipofServer){ //记录这个员工发数据到外网
 		if(!(dateIn in this.workReports)){
 			var nwr = new WorkReport(dateIn, 0, false);
@@ -111,6 +136,8 @@ function Employee(id){
 			this.punish(dateIn, 20);
 			console.log(punishment[20].getText(this.id, dateIn));
 			this.criticalMessage = " LEAK!!";
+		} else if (amount > 150000000){
+			this.punish(dateIn, 19);
 		}
 		//console.log(this.id + " was using " + ipofServer + " sending " + amount + " bytes out. times " +
 		//"used server: " + this.ipAccess[ipofServer]);
@@ -179,20 +206,7 @@ function Employee(id){
 	
 	
 	this.getFailedLogonTotalCount = function(){ //拿到今天和昨天的登录失败总额
-//		var dateParts = accessDate.split("-"); //2017-11-06
-//		var day = parseInt(dateParts[2]); day = day - 1;
-//		var otherDate = "";
-//		var recentFailedLogins = this.workReports[accessDate].failedLogins;
-//		if(day > 1){
-//			if(day < 10) day = "0" + day.toString();
-//			var yesterday = dateParts[0] + "-" + dateParts[1] + "-" + day;
-//			
-//			otherDate = " and " + yesterday;
-//			var yesterdayReport = this.workReports[yesterday];
-//			if(typeof yesterdayReport !== "undefined"){
-//				recentFailedLogins += yesterdayReport.failedLogins;
-//			}
-//		}
+
 		
 		var logInFails = 0;
 		var alerts = [];
@@ -220,23 +234,14 @@ function Employee(id){
 		this.examineAccessedIP(accessDate, login.dip);//记录访问的IP地址
 		
 		if(loginSuccess){
-			
-//			if(this.id === "1211" || this.id === "1080"){
-//				var activeComputerEmployee = manager.findEmployeeByMainIp(login.sip);
-//				var owner = "?";
-//				if(typeof activeComputerEmployee !== "undefined") owner = activeComputerEmployee.id;
-//				console.log("!->" + this.id + " logging in from " + login.sip + " belongs to: " + owner);
-//			}
-			
 			if(!usedIPisMyIp && this.daysAtWork > 1){
 				
 				var badActor;
 				if(typeof manager !== "undefined"){
 					badActor = manager.findEmployeeByMainIp(login.sip);
 					if(typeof badActor !== "undefined"){
-						//console.log(badActor.id + " successful HACK DETECTED getting into " + login.user);
+
 						var whoDunnit = badActor.id;
-						//console.log("compare: " + badActor.id + " " + login.user + " -> " + badActor.id.localeCompare(login.user));
 						if(badActor.id.localeCompare(login.user) == 0){
 							whoDunnit = "其他";
 						} else {
@@ -245,11 +250,8 @@ function Employee(id){
 						this.criticalMessage = "活动来自" + whoDunnit + "的电脑";
 						console.log(this.id + " strange login on " + accessDate);
 	
-						//var recentFailed = this.getFailedLogonTotalCount();
+						this.punish(accessDate, 13);
 
-						//if(recentFailed > 10){
-							this.punish(accessDate, 13);
-						//}
 					} else {
 						console.log(this.id + " strange logon detected but no bad actor detected: " + accessDate);
 					}
@@ -314,13 +316,8 @@ function Employee(id){
 		
 		var dateparts = email.time.split(" ");	//增加工作量
 		var sentDate = dateparts[0];
-		
-		
-		//console.log("examining email used: " + email.sip + " " + sentDate);
 		this.examineUsedIP(sentDate, email.sip); //记录使用的IP地址
-//		if(email.from.split("@")[0] === "1348"){
-//			console.log("our guy sent an email! : " + this.totalWorkOutput);
-//		}
+
 		var usedIPisMyIp = true;
 		if(this.daysKnown > 3){
 			usedIPisMyIp = email.sip === this.mainIP;
@@ -336,7 +333,6 @@ function Employee(id){
 					badguy = badguy.id;
 				}
 			}
-			//console.log("SUSPECTED EMAIL TAMPERING OF " + this.id + "'S EMAIL BY " + badguy);
 		} else {
 			this.reward(sentDate, rewards.sentEmail);
 		}
@@ -346,7 +342,6 @@ function Employee(id){
 			email.to.split(";").forEach(function(address){
 				var front = address.split("@"); 
 				front = front[0];
-				//console.log(fromID + " sent to " + front);
 				if(!isNaN(front)){
 					sentToList.push(front);
 				}
@@ -377,6 +372,9 @@ function Employee(id){
 			thisReport.minutesWorked = workReport.minutesWorked;
 			thisReport.present = workReport.present;
 			thisReport.hasCheckedIn = true;
+			if(typeof workReport.arrivedAtWork !== "undefined"){
+				thisReport.arrivedAtWork = workReport.arrivedAtWork;
+			}
 			this.workReports[workReport.estDate] = thisReport;
 		} else {
 			workReport.hasCheckedIn = true;
@@ -384,7 +382,7 @@ function Employee(id){
 			if(workReport.present){
 				this.daysAtWork++;
 				this.totalMinutesWorked += workReport.minutesWorked;
-			} 
+			}
 			this.workReports[workReport.estDate] = workReport;
 		}
 		if(!workReport.present){
@@ -396,13 +394,9 @@ function Employee(id){
 				var dayString = "0";
 				if(day > 9) dayString = "";
 				var yesterdayString = parts[0] + "-" + parts[1] + "-" + dayString + (day - 1);
-				
-				
-				//console.log("absent on " + workReport.estDate);
-				//console.log("looking at secondary date: " + yesterdayString);
+
 				var yesterdayReport = this.workReports[yesterdayString];
-				
-				
+
 				if(typeof yesterdayReport !== "undefined"){
 					if(!yesterdayReport.present && yesterdayReport.hasCheckedIn){
 						this.punish(workReport.estDate, 2);
@@ -419,7 +413,7 @@ function Employee(id){
 										if(this.criticalMessage === ""){
 											this.criticalMessage = " ABSENTEE WARNING!!";
 										}
-										console.log(punishment[15].getText(this.id, workReport.estDate));
+										//console.log(punishment[15].getText(this.id, workReport.estDate));
 									}
 								}
 							}
@@ -431,8 +425,17 @@ function Employee(id){
 			}
 			
 			//console.log(this.id + " missed work! \nnew danger: " + this.dangerLevel + "\n test compare: " + tryDate.toString()+ " : " + workReport.estDate);
+		} else {
+			if(typeof workReport.arrivedAtWork !== "undefined"){
+				var hourPart = parseInt(workReport.arrivedAtWork.split(":")[0]);
+				if(hourPart > 9){
+					this.punish(workReport.estDate, 21);
+				}
+			}
 		}
 	}
+	
+	
 	
 	this.compileRecentDangerReport = function(){
 		var dangerReports = [];
