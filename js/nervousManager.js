@@ -1,326 +1,206 @@
-
-	//Nervous Manager
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title></title>
+	</head>
 	
-	//my goal： 抓住员工1487 和 1376
-	//1487 logged into accounts 1211, 1080, 1228
-	//17,21,27,30号 data sent to outside servers
-	//1376 tries to delete database data
-	//VPN remote access: 1147, 1283, 1284, 1328, 1334, 1376, 1487, 1494 
-	//on 11-24 13.250.177.223 gets data sent to it by internal server
+	<script src="js/punishment.js" type="text/javascript" charset="utf-8"></script>
+	<script src="dep/d3.v4.js" type="text/javascript"></script>
+	<script src="dep/scaleRadial.js" type="text/javascript"></script>
 	
-	//1389, 1383, 1352, 1149
-function NervousManager (name){
+	<script src="js/model.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/artist.js" type="text/javascript"></script>
+	<script src="js/server.js" type="text/javascript"></script>
+	<script src="js/employee.js" type="text/javascript" charset="utf-8"></script>
 	
-	this.name = name; //name of this manager
-	totalEmployees = 0;
-	employees = {};
-	servers = {};
-	this.lastDayExamined = 0;
-	this.managerBusy = false;
 	
-	this.findEmployeeByMainIp = function(ip){
-		var empsWithThisMainIP = [];
-		var bestGuess;
-		for (let [key, employee] of Object.entries(employees)) {
-			if(employee.mainIP === ip){
-				empsWithThisMainIP.push(employee);
-			}
-		}
-		if(empsWithThisMainIP.length === 1){
-			return empsWithThisMainIP[0];
-		} else if (empsWithThisMainIP.length > 1){
-			//console.log("THIS FUNCTION WAS USEFUL");
-			bestGuess = empsWithThisMainIP[0];
-			for(var i = 1; i < empsWithThisMainIP; i++){
-				var thisEmpl = empsWithThisMainIP[i];
-				var ipUses = thisEmpl.ipUse[ip];
-				if(ipUses > bestGuess.ipUse[ip]){
-					bestGuess = thisEmpl;
-				}
-			}
-			return bestGuess;
-		}
-	}
+	<script src="js/nervousManager.js" type="text/javascript" charset="utf-8"></script>
 	
-	this.relaxTension = function(){ //衰退危险
-		for (let [key, employee] of Object.entries(employees)) {
-			if(employee.dangerLevel > 0){
-				//console.log("relaxing danger value of " + employee.id + " from " + employee.dangerLevel);
-				var danger = employee.dangerLevel;
-				var workOutput = employee.workOutput;
-				danger = Math.floor(danger * 0.60);
-				if(danger < 40) danger -= 10;
-				if(danger < 0) danger = 0;
-				
-				workOutput = Math.floor(workOutput * 0.50);
-				if(workOutput < 40) workOutput -= 10;
-				if(workOutput < 0) workOutput = 0;
-				
-				employees[key].dangerLevel = danger;
-				employees[key].workOutput = workOutput;
-				employee.criticalMessage = "";
-				//console.log(" to: " + employees[key].dangerLevel);
-			}
-		}
-		for(let [key, server] of Object.entries(servers)) {
+	<link rel="stylesheet" href="css/asterstyle.css" />
+	<body>
+		<div id="buttonLine">
+			<button id='loadday1' onclick="loadCSVforDay(1)">1</button>
+			<button id='loadday2' onclick="loadCSVforDay(2)">2</button>
+			<button id='loadday3' onclick="loadCSVforDay(3)">3</button>
+			<button id='loadday4' onclick="loadCSVforDay(4)">4</button>
+			<button id='loadday5' onclick="loadCSVforDay(5)">5</button>
+			<button id='loadday6' onclick="loadCSVforDay(6)">6</button>
+			<button id='loadday7' onclick="loadCSVforDay(7)">7</button>
+			<button id='loadday8' onclick="loadCSVforDay(8)">8</button>
+			<button id='loadday9' onclick="loadCSVforDay(9)">9</button>
+			<button id='loadday10' onclick="loadCSVforDay(10)">10</button>
 			
-			server.mostRecentUsers = [];
-		}
-	}
-	
-	function examineServer(ip){//确定一个服务器是存在的。不存在的话：创建
-		if(ip in this.servers){
+			<button id='loadday11' onclick="loadCSVforDay(11)">11</button>
+			<button id='loadday12' onclick="loadCSVforDay(12)">12</button>
+			<button id='loadday13' onclick="loadCSVforDay(13)">13</button>
+			<button id='loadday14' onclick="loadCSVforDay(14)">14</button>
+			<button id='loadday15' onclick="loadCSVforDay(15)">15</button>
+			<button id='loadday16' onclick="loadCSVforDay(16)">16</button>
+			<button id='loadday17' onclick="loadCSVforDay(17)">17</button>
+			<button id='loadday18' onclick="loadCSVforDay(18)">18</button>
+			<button id='loadday19' onclick="loadCSVforDay(19)">19</button>
+			<button id='loadday20' onclick="loadCSVforDay(20)">20</button>
 			
-		} else {
-			this.servers[ip] = new Server(ip);
-		}
-	}
+			<button id='loadday21' onclick="loadCSVforDay(21)">21</button>
+			<button id='loadday22' onclick="loadCSVforDay(22)">22</button>
+			<button id='loadday23' onclick="loadCSVforDay(23)">23</button>
+			<button id='loadday24' onclick="loadCSVforDay(24)">24</button>
+			<button id='loadday25' onclick="loadCSVforDay(25)">25</button>
+			<button id='loadday26' onclick="loadCSVforDay(26)">26</button>
+			
+			<button id='loadday27' onclick="loadCSVforDay(27)">27</button>
+			<button id='loadday28' onclick="loadCSVforDay(28)">28</button>
+			
+			<button id='loadday29' onclick="loadCSVforDay(29)">29</button>
+			<button id='loadday30' onclick="loadCSVforDay(30)">30</button>
+			
+			<button onclick="triggerFindDangerousEmployees()">Draw</button>
+			
+			
+			  <input type="range" min="10" max="150" value="20" class="rangeSlider" id="sliderRange">
+                  
+			<label class="switch" style="float: right;">
+			  <input id="randomYesNo" type="checkbox" onchange="triggerFindDangerousEmployees()">
+			  <span class="slider"></span>
+			</label>
+		</div>
+		<div id="d3Parent">
+			<div id="asterDiv" onclick="removeHightlights()" class=""></div>
+		</div>
+		<div id="backgroundDiv"></div>
+		<div id="floaterParent">
+			<div id="barDiv"></div>
+		</div>
+		<div id="secondaryExplore">
+			
+		</div>
+		<div id="tertiaryExplore">
+			
+		</div>
+	</body>
 	
-	function examineEmployeeID(id){//确定一个员工是存在的。不存在的话：创建
-		if(typeof id !== "undefined"){
-			if(id.length === 4){
-				if(typeof this.employees[id] === "undefined"){ 
-					employees[id] = new Employee(id);
-					totalEmployees++;
-					//console.log("making new employee with id of " + employees[id].id);
-				}
-			}
-		}
-	}
+	<script type="text/javascript">
+		//MAIN:
+		var manager = new NervousManager("Erich");
 
-	function examineEmail(email){
-		//time, proto, sip, sport, dip, dport, from, to, subject
-		//console.log("got email from " +email.from + " emails");
+		var rangeslider = document.getElementById("sliderRange"); 
+ 
+
+		  
+		rangeslider.oninput = function() { 
+		  triggerFindDangerousEmployees(this.value); 
+		} 
+
+		function triggerFindDangerousEmployees(numberToFind){
+			if(!numberToFind){
+				numberToFind = document.getElementById("sliderRange").value;
+			}
+			
+			drawRadialStackedBarChart(manager.findDangerousEmployees(numberToFind));
+		}
 		
-		var fromParts = email.from.split("@");
-		if(!isNaN(fromParts[0])){
-			examineEmployeeID(fromParts[0]);
-			employees[fromParts[0]].addEmailReport(email);
+		function loadCSVforDay(day){
+			document.getElementById("barDiv").innerHTML = "";
+			document.getElementById("backgroundDiv").innerHTML = "";
+			hideToolbars();
+			if(!manager.managerBusy){
+				manager.managerBusy = true;
+			//document.getElementById("statush").innerHTML = "loading...";
+				if(day > 1){
+					if(day !== manager.lastDayExamined){
+						manager.relaxTension();
+					}
+				}
+				var child = document.getElementById("loadday" + day);
+				var parent = document.getElementById("buttonLine");
+				
+				parent.removeChild(child);
+				
+				manager.loadCheckingCSV(day)
+				manager.loadEmailCSV(day);
+				manager.loadLoginCSV(day);
+				manager.loadTCPLogCSV(day);
+				manager.loadWebLogCSV(day);
+				manager.lastDayExamined = day;
+				
+			}
 		}
-	}
-
-
-	function examineClockInReport(clockIn){ //分析一条打卡日志 
-		//id, day, checkin, checkout
-		var id = clockIn.id;
-		examineEmployeeID(id);
-		var wasAtWork = (clockIn.checkin !== "0" && clockIn.checkout !== "0");
-		var minutesAtWork = 0;
 		
-		if(wasAtWork){
-			//example:11/1/2017  6:22:15 AM
-			var checkin = new Date(clockIn.checkin);
-			var checkout = new Date(clockIn.checkout);
-			var timeDiff = checkout.getTime() - checkin.getTime();
-			timeDiff = (timeDiff / 1000) / 60;
-			minutesAtWork = timeDiff;
-		}
-		var workReport = new WorkReport(clockIn.day,minutesAtWork,wasAtWork);
-		employees[id].addWorkReport(workReport);
-	}
-	
-	function examineLogin(login){
-		//proto, dip, dport, sip, sport, state, time, user
-		if(login){
-			if(login.user.charAt(0) !== "r" && !isNaN(login.user)){//ignore root
-				if(isCompanyServer(login.dip)){
-					examineServer(login.dip);
-					servers[login.dip].addLoginReport(login);
-				}
-				examineEmployeeID(login.user);
-				employees[login.user].addLoginReport(login);
-			}
-		}
-	}
-	
-	function examineTCPReport(report){
-		//stime, dtime, proto, dip, dport, sip, sport, uplink_length, downlink_length
-		if(report){
-			if(manager){
-				if(isCompanyServer(report.sip)){
-					examineServer(report.sip);
-					servers[report.sip].addTCPReport(report);
-				} else {
-					var likelyEmployee = manager.findEmployeeByMainIp(report.sip);
-					if(likelyEmployee){
-						if(likelyEmployee.daysAtWork > 1){
-							likelyEmployee.addTCPReport(report);
-							//console.log("got " + report.proto + " log for " +likelyEmployee.id);
-						}
-					} else {
-						if(report.dip === "13.250.177.223"){
-							console.log("MISSED VERY IMPORTANT TRANSFER");//on 11-24 13.250.177.223
-						}
-					}
-				}
-
-			}
-		}
-	}
-	
-	function examineWebLog(log){
-		//time, sip, sport, dip, dport, host
-		if(log){
-			if(manager){
-				var likelyEmployee = manager.findEmployeeByMainIp(log.sip);
-				if(likelyEmployee){
-					if(likelyEmployee.getDaysWorked() > 1){
-//						console.log("who uses " +log.sip + ": " + likelyEmployee.id + " -> " + log.host);
-						likelyEmployee.addWebLog(log);
-					}
-				}
-			}
-		}
-	}
-	
-	this.loadLoginCSV = function(day){
-		var dayString = "0";
-		if(typeof day !== "undefined"){
-			if(day < 10){
-				dayString = dayString + day;
-			} else {
-				dayString = day;
-			}
-			d3.csv("csv/2017-11-"+dayString+"/login.csv", function(data) {
-				data.forEach(function(d){
-					examineLogin(d);
-				});
-			});
-		}
-	}
-	
-	this.loadEmailCSV = function(day){
-		var dayString = "0";
-		if(typeof day !== "undefined"){
-			if(day < 10){
-				dayString = dayString + day;
-			} else {
-				dayString = day;
-			}
-			d3.csv("csv/2017-11-"+dayString+"/email.csv", function(data) {
-				data.forEach(function(d){
-					examineEmail(d);
-				});
-			});
-		}
-		return this;
-	}
-
-	this.loadCheckingCSV = function(day){//加载打卡日志CSV
-		var dayString = "0";
-		if(typeof day !== "undefined"){
-			if(day < 10){
-				dayString = dayString + day;
-			} else {
-				dayString = day;
-			}
-			d3.csv("csv/2017-11-"+dayString+"/checking.csv", function(data) {
-				data.forEach(function(d){
-					examineClockInReport(d);
-				});
-			});
-		}
-		return this;
-	};
-	
-	this.loadTCPLogCSV = function(day){
-		var dayString = "0";
-		if(typeof day !== "undefined"){
-			if(day < 10){
-				dayString = dayString + day;
-			} else {
-				dayString = day;
-			}
-			d3.csv("csv/2017-11-"+dayString+"/tcpLog.csv", function(data) {
-				data.forEach(function(d){
-
-					var char0 = d.proto.charAt(0);
-					if(char0 === 's' && d.proto.charAt(1) === 's' || char0 === 'f'){
-						if(parseInt(d.downlink_length) > 15000 || parseInt(d.uplink_length) > 15000){
-							d.downlink_length = parseInt(d.downlink_length);
-							d.uplink_length = parseInt(d.uplink_length);
-							examineTCPReport(d);
-						}
-					}
-				});
-			});
-		}
-		return this;
-	}
-	
-	this.loadWebLogCSV = function(day){
-		var dayString = "0";
-		if(typeof day !== "undefined"){
-			if(day < 10){
-				dayString = dayString + day;
-			} else {
-				dayString = day;
+		function highlightAlerts(classID){
+			if(currentDrawing.textOverridden){
+				removeHightlights();
 			}
 			
-			d3.csv("csv/2017-11-"+dayString+"/weblog.csv", function(data) {
-				data.forEach(function(d){
-					//time, sip, sport, dip, dport, host
-				if(d.host.length > 0){ //不看没有网址的
-					var char0 = d.host.charAt(0);
-					if(char0 !== 'e' && d.host.charAt(1) !== 'm'){ //不看email的
-						if(char0 !== 'O' && d.host.charAt(1) !== 'A'){//不看OA内部的
-							examineWebLog(d);
-						}
-					}
-				}
-				});
-				manager.managerBusy = false;
-				triggerFindDangerousEmployees();
+			currentDrawing.saveOldText = {};
+			var elems = document.getElementsByClassName("radTextSegment");
+			var punishID = parseInt(classID.substring(3, classID.length));
+			
+			for(var i = 0; i < elems.length; i++){
+				currentDrawing.saveOldText[elems[i].id] = elems[i].innerHTML;
+				elems[i].innerHTML = manager.getEmployee(elems[i].id.substring(0, 4)).countRecentPunishments(punishID);
+			}
+
+			var elemsd3 = d3.selectAll("." + classID);
+			elemsd3.style('fill', punishment[punishID].color);
+			currentDrawing.textOverridden = true;
+		}
+		
+		function removeHightlights(classID){
+			if(!currentDrawing.keepSecondary){
+				document.getElementById("secondaryExplore").innerHTML = "";
+			} else {
+				currentDrawing.keepSecondary = false;
+			}
+			
+			if(currentDrawing.textOverridden){
+				var toRemove = "dangerBar";
+				if(classID) toRemove = classID;
 				
-			});
+				for (let [key, value] of Object.entries(currentDrawing.saveOldText)) {
+					var elem = document.getElementById(key);
+					if(elem) elem.innerHTML = value;
+				}
+				
+				var elemsd3 = d3.selectAll("." + toRemove);
+				
+				elemsd3.each(function(){
+					var d3Elem = d3.select(this);
+					var dangerLevel = parseInt(d3Elem.attr("dangerLevel"));
+					d3Elem.style('fill', getWedgeColor(dangerLevel));
+				});
+				currentDrawing.textOverridden = false;
+				
+			}
+		}
+		
+		function toggleFocused(id, angle){ //员工被选上的反应方法
+			
+			hideToolbars();
+			currentDrawing.examiningLifeTime = false;
+			rotateCBG(-1 * angle * 57.2957795);
+			var elem = document.getElementById(id +"tx");
+			elem.classList.add("arcTextSelected");
 
+			var isShowingAll = false;
+			drawHorizontalBarChart(manager.getEmployee(id).compileRecentDangerReport(), id, isShowingAll);
+			
+			drawLineGraph(id,"danger")//"danger"
 		}
-		return this;
-	}
-
-	this.takeCheckingString = function(line){//接受一条新的打卡日志(NOT IN USE)
-		var checkinObject = new CheckIn(line);
-		examineClockInReport(checkinObject);
-		return this;
-	}
-
-	this.getEmployee = function(id){
-		return employees[id];
-	}
+		
+		function showAllDanger(id){ //让bar chart显示所有警告信息
+			var isShowingAll = true;
+			currentDrawing.examiningLifeTime = true;
+			drawHorizontalBarChart(manager.getEmployee(id).compileCompleteDangerReport(), id, isShowingAll);
+		}
+		
+		function hideToolbars(){
+			if(currentDrawing.textOverridden){
+				removeHightlights();
+			}
+			document.getElementById("barDiv").innerHTML = "";
+			document.getElementById("secondaryExplore").innerHTML = "";
+		}
+	</script>
+</html>
 	
-	this.getTotalEmployees = function(){
-		return totalEmployees;
-	}
-	
-	this.findDangerousEmployees = function(num){
-		var numberToFind = 20;
-		if(typeof num !== "undefined"){
-			numberToFind = num;
-		}
-		var dangerousEmployees = [];
-		for (let [key, value] of Object.entries(employees)) {
-		  if(value.dangerLevel > 0){
-			dangerousEmployees.push(value);
-			//console.log("dangerous employee: " + value.id + " : " + value.dangerLevel);
-		  }
-		}
-		dangerousEmployees.sort(function(a, b){
-			return a.dangerLevel - b.dangerLevel;
-		});
-
-		if(dangerousEmployees.length > numberToFind){
-			dangerousEmployees = dangerousEmployees.slice((dangerousEmployees.length - numberToFind),dangerousEmployees.length);
-		}
-		return dangerousEmployees.reverse();
-	}
-	
-	this.printOutFailedLogins = function(employees){//not in use
-		for (let [key, value] of Object.entries(employees)) {
-			var employii = value;
-		  for (let [key2, value2] of Object.entries(employii.workReports)) {
-			console.log(employii.id + "'s failed logins: " + value2.failedLogins + " on " + value2.estDate);
-		  }
-		}
-	}
-	
-}
